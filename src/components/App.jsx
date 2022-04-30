@@ -1,9 +1,10 @@
-import React from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as yup from 'yup';
+import { Component } from 'react';
+import { ContactForm } from './ContactForm/ContactForm';
+import { Filter } from './Filter/Filter';
 import { nanoid } from 'nanoid';
+import { ContactList } from './ContactList/ContactList';
 
-export class App extends React.Component {
+export class App extends Component {
   state = {
     contacts: [
       { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
@@ -12,71 +13,64 @@ export class App extends React.Component {
       { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
     ],
     filter: '',
-    name: '',
-    number: '',
   };
 
-  // phoneRegExp =
-  //   /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
+  addContact = (name, number) => {
+    const contact = {
+      id: nanoid(),
+      name,
+      number,
+    };
 
-  schema = yup.object().shape({
-    name: yup.string().required(),
-    number: yup.string().required(),
-  });
+    const { contacts } = this.state;
 
-  initialValues = {
-    name: '',
-    number: '',
+    for (const { name } of contacts) {
+      if (name === contact.name) {
+        return alert(`${contact.name} is already in contacts`);
+      }
+    }
+
+    this.setState(({ contacts }) => {
+      return {
+        contacts: [contact, ...contacts],
+      };
+    });
   };
 
-  nameInputId = nanoid();
-  numberInputId = nanoid();
+  deleteContact = deleteId => {
+    this.setState(({ contacts }) => {
+      return {
+        contacts: contacts.filter(({ id }) => id !== deleteId),
+      };
+    });
+  };
 
-  handleSubmit = (values, { resetForm }) => {
-    this.state.contacts.push(values);
-    console.log(this.state.contacts);
-    resetForm();
+  changeFilter = e => {
+    this.setState({
+      filter: e.currentTarget.value,
+    });
+  };
+
+  filterContacts = () => {
+    const { contacts, filter } = this.state;
+    const normalizeFilter = filter.toLowerCase();
+    return contacts.filter(contact =>
+      contact.name.toLowerCase().includes(normalizeFilter)
+    );
   };
 
   render() {
-    const { contacts } = this.state;
+    const { filter } = this.state;
+    const { addContact, deleteContact, filterContacts, changeFilter } = this;
+    const visibleContacts = filterContacts();
     return (
       <>
-        <section>
-          <h2>Phonebook</h2>
-          <Formik
-            initialValues={this.initialValues}
-            validationSchema={this.schema}
-            onSubmit={this.handleSubmit}
-          >
-            <Form autoComplete="off">
-              <label htmlFor="name">
-                Name
-                <Field type="text" name="name" id={this.nameInputId} />
-                <ErrorMessage name="name" />
-              </label>
-              <label htmlFor="number">
-                Number
-                <Field type="tel" name="number" id={this.numberInputId} />
-                <ErrorMessage name="number" />
-              </label>
-              <button type="submit">Add contact</button>
-            </Form>
-          </Formik>
-        </section>
-        <section>
-          <h2>Contacts</h2>
-          {contacts.map(({ id, name, number }) => (
-            <ul>
-              <li>
-                <span>
-                  {name}: {number}
-                </span>
-                <button type="button">Delete</button>
-              </li>
-            </ul>
-          ))}
-        </section>
+        <h1>Phonebook</h1>
+        <ContactForm addContact={addContact} />
+
+        <h2>Contacts</h2>
+        <Filter filter={filter} changeFilter={changeFilter} />
+        <ContactList contacts={visibleContacts} deleteContact={deleteContact} />
       </>
     );
   }
