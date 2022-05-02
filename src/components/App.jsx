@@ -1,8 +1,10 @@
 import { Component } from 'react';
+import { nanoid } from 'nanoid';
+
 import { ContactForm } from './ContactForm/ContactForm';
 import { Filter } from './Filter/Filter';
-import { nanoid } from 'nanoid';
 import { ContactList } from './ContactList/ContactList';
+import { Container } from './App.styled';
 
 export class App extends Component {
   state = {
@@ -16,19 +18,20 @@ export class App extends Component {
   };
 
   addContact = (name, number) => {
+    const { contacts } = this.state;
+
     const contact = {
       id: nanoid(),
       name,
       number,
     };
 
-    const { contacts } = this.state;
-
-    for (const { name } of contacts) {
-      if (name === contact.name) {
+    contacts.map(contactItem => {
+      if (contactItem.name === contact.name) {
         return alert(`${contact.name} is already in contacts`);
       }
-    }
+      return contactItem;
+    });
 
     this.setState(({ contacts }) => {
       return {
@@ -64,14 +67,11 @@ export class App extends Component {
     const { addContact, deleteContact, filterContacts, changeFilter } = this;
     const visibleContacts = filterContacts();
     return (
-      <>
-        <h1>Phonebook</h1>
+      <Container>
         <ContactForm addContact={addContact} />
-
-        <h2>Contacts</h2>
         <Filter filter={filter} changeFilter={changeFilter} />
         <ContactList contacts={visibleContacts} deleteContact={deleteContact} />
-      </>
+      </Container>
     );
   }
 }
